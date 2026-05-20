@@ -105,6 +105,8 @@ Proceed with discipline.
     * [Telegram](https://github.com/Anime4000/RTL960x/issues/99#issuecomment-1611726668) <sup>Mikrotik script by [@smnrock](https://github.com/smnrock), sending health report via Telegram Bot</sup>
     * [Telegram via #!/bin/bash](https://github.com/Anime4000/RTL960x/discussions/277) <sup>Linux Bash script by [@chiragkrishna](https://github.com/chiragkrishna), sending health report via Telegram Bot</sup>
     * [Grafana](https://github.com/Strykar/GPON) dashboard and Prometheus collector for DDM-grade PON telemetry by [@Strykar](https://github.com/Strykar).
+    * [GPON Telemetry Dashboard for RouterOS Containers
+](https://github.com/marfillaster/gpon-telemetry)
 6. [Diagnostic](Docs/DIAG.md)
     * [Factory Reset](Docs/factory_reset.md)
     * [Switch/Roll back Firmware](Docs/fw_part.md)
