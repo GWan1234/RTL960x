@@ -10,8 +10,14 @@ This repository aims to document and demystify the RTL960x platform for the glob
 
 Every contribution no matter how small helps expand access and understanding.
 
-Have technical insights or undocumented behavior?  
-Contribute here → [Docs/Stock_ONU.md](Docs/Stock_ONU.md)
+## Community Forum
+
+For discussions, troubleshooting, searchable issues, firmware experiments, tips, tricks, and networking-related topics:
+
+👉 [Pururin Collective Forum](https://pururin.moe/viewtopic.php?t=7)
+
+Main GitHub repositories will remain focused on vendor-neutral and structured development discussions.  
+Use the forum for non-neutral discussions, community experiments, ISP-specific tweaks, and informal sharing.
 
 # ⚠️ SAFETY NOTICE
 
@@ -104,7 +110,7 @@ Proceed with discipline.
 4. Health Reporting
     * [Telegram](https://github.com/Anime4000/RTL960x/issues/99#issuecomment-1611726668) <sup>Mikrotik script by [@smnrock](https://github.com/smnrock), sending health report via Telegram Bot</sup>
     * [Telegram via #!/bin/bash](https://github.com/Anime4000/RTL960x/discussions/277) <sup>Linux Bash script by [@chiragkrishna](https://github.com/chiragkrishna), sending health report via Telegram Bot</sup>
-    * [Grafana](https://github.com/Strykar/GPON) dashboard and Prometheus collector for DDM-grade PON telemetry by [@Strykar](https://github.com/Strykar).
+    * [Grafana](https://github.com/Strykar/GPON) <sup>dashboard and Prometheus collector for DDM-grade PON telemetry by [@Strykar](https://github.com/Strykar).</sup>
     * [GPON Telemetry Dashboard for RouterOS Containers](https://github.com/marfillaster/gpon-telemetry)
 6. [Diagnostic](Docs/DIAG.md)
     * [Factory Reset](Docs/factory_reset.md)
