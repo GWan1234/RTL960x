@@ -279,7 +279,7 @@ flash set OMCI_OLT_MODE 3
 ## OUI
 
 ```shell
-flash set OUI
+flash set OUI 875773
 ```
 
 The Organizationally Unique Identifier (OUI) identifies the manufacturer assigned to a MAC address block.
@@ -287,7 +287,7 @@ The Organizationally Unique Identifier (OUI) identifies the manufacturer assigne
 ## Hardware Serial Number
 
 ```shell
-flash set HW_SERIAL_NO
+flash set HW_SERIAL_NO UONHUWH12341234123
 ```
 
 This is separate from `GPON_SN`.
