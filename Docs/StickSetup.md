@@ -1,69 +1,133 @@
-# Setup
-In this guide, how to setup your **SFP XPON ONU Stick** based on your existing ONU and get Authenticated!
+# RTL960x SFP xPON ONU Configuration Guide
 
-Using Huawei ONU `HG8240H` device information for this setup example
+## Overview
 
-# Default Password
-| Model | Username | Password |
-|-------|----------|----------|
-| DFP-34X-2C2 | `admin` | `admin` |
-| TWCGPON657  | `admin` | `system` |
-| UF-Instant  | `ubnt` | `ubnt` |
-| V2801F      | `admin` | `stdONU101` |
-| V2802RH     | `admim` | `stdONUi0i` |
-| LXT-010S-H  | `leox` | `leolabs_7` |
+This guide describes how to configure a Realtek RTL960x-based SFP xPON ONU to emulate an existing ONU and obtain successful authentication and service provisioning from the OLT.
 
-## [TWCGPON657](https://item.taobao.com/item.htm?spm=a1z09.2.0.0.c0552e8d7UBYLF&id=597031866488)
-If you using **TWCGPON657** you need enable `telnet` by enter this address:
-| State     | URL |
-|-----------|------------------------------------------|
-| `Enable`  | `http://192.168.1.1/bd/telnet_open.asp`  |
-| `Disable` | `http://192.168.1.1/bd/telnet_close.asp` |
+Most GPON and EPON operators provision services based on a combination of authentication credentials and ONU identity information. Simply reaching the O5 operational state does not guarantee that the OLT will deliver a usable OMCI configuration. Many operators restrict provisioning to approved ONU models, vendor profiles, or device identities.
 
-# OLT & O5
-* OLT might have some **restriction** which device that can be used on their fiber network.
-* OLT need to know which device are you using before sending proper OMCI even you have `O5`
-* OLT can provision specific ONU LAN Port, hance OLT need to know which device.
+The goal of this guide is to replicate the identity of a provisioned ONU so that the SFP xPON ONU receives the same service profile as the original device.
 
-Here ranking from most important to least
-* Authentication
-  * PLOAM / LOID
-  * Serial Number
-  * MAC Address <sub><sup>*[V2801F](#v2801f), [DFP-34X-2C2](#dfp-34x-2c2)</sup></sub>
-* OMCI Device Info
-  * Hardware Version <sub><sup>*[V2801F](#v2801f)</sup></sub>
-  * Manufacture Info
-  * Device Model
-  * Software Version
+Huawei HG8240H device information is used throughout this guide as an example.
 
-It's best to clone ONU information via telnet or webgui config (backup, edit, restore)
+---
 
-# Get Information
-You need to login into your old ONU, most ONU will have information page where you can get:
-| Information | Flash Set Value | Example |
-|-------------|-----------------|---------|
-| MAC Address | `ELAN_MAC_ADDR` <sub><sup>*EPON user only, [V2801F](#v2801f), [DFP-34X-2C2](#dfp-34x-2c2)</sup></sub> | `781735000000` |
-| Hardware Version | `HW_HWVER` <sub><sup>*[V2801F](#v2801f)</sup></sub> | `BF9.A` | 
-| Software Version | `OMCI_SW_VER1`, `OMCI_SW_VER2`, `CUSTOM_OMCI_SW_VER1`, `CUSTOM_OMCI_SW_VER2` | `V3R017C10S100` |
-| Serial Number | `GPON_SN` | `HWTC35000000` |
-| Manufacture Info | `PON_VENDOR_ID` | `HWTC` |
-| Device Model | `GPON_ONU_MODEL` | `HG8240H` |
-| OUI | `OUI` | `875773` |
-| Device SN | `HW_SERIAL_NO` | `UONHUWH12341234123` |
+# Default Credentials
 
-# ONU Information Page Example
-## G-240G-E
-![SFU](Images/G-240G-E.png)
+| Model       | Username | Password    |
+| ----------- | -------- | ----------- |
+| DFP-34X-2C2 | `admin`  | `admin`     |
+| TWCGPON657  | `admin`  | `system`    |
+| UF-Instant  | `ubnt`   | `ubnt`      |
+| V2801F      | `admin`  | `stdONU101` |
+| V2802RH     | `admin`  | `stdONUi0i` |
+| LXT-010S-H  | `leox`   | `leolabs_7` |
 
-## HG8240H
-![RGW](Images/HG8240H.png)
+## TWCGPON657
 
-## HG8240H5
-![RGW](Images/HG8240H5.png)
+If you are using a TWCGPON657 module, Telnet access must be enabled before configuration.
 
-# Backup Original
-You may need to write down your original value
-```
+| State   | URL                                      |
+| ------- | ---------------------------------------- |
+| Enable  | `http://192.168.1.1/bd/telnet_open.asp`  |
+| Disable | `http://192.168.1.1/bd/telnet_close.asp` |
+
+---
+
+# Understanding OLT Authentication and O5
+
+The OLT determines which OMCI profile and provisioning parameters should be delivered based on the ONU identity reported during registration.
+
+An ONU may successfully reach the O5 operational state while still receiving incomplete or incompatible OMCI provisioning. This typically occurs when the reported ONU identity does not match a profile recognized by the OLT.
+
+Many OLT platforms support vendor-specific ONU profiles and may reject, limit, or modify provisioning for unsupported devices.
+
+The following parameters are commonly evaluated during ONU authentication and service provisioning.
+
+## Authentication Parameters
+
+Most important:
+
+* PLOAM Password
+* LOID Credentials
+* GPON Serial Number
+* MAC Address (operator dependent)
+
+## ONU Identity Parameters
+
+Used for OMCI provisioning:
+
+* Vendor ID
+* Device Model
+* Hardware Version
+* Software Version
+
+## Additional Parameters
+
+Vendor-specific requirements:
+
+* OUI
+* Hardware Serial Number
+* CWMP Information
+
+It is recommended to clone the original ONU configuration whenever possible.
+
+---
+
+# Collect ONU Information
+
+Before configuring the SFP xPON ONU, collect information from the original ONU.
+
+Most ONUs provide this information through the web interface, Telnet, SSH, or exported configuration files.
+
+| Information            | Flash Variable                                                               | Example              |
+| ---------------------- | ---------------------------------------------------------------------------- | -------------------- |
+| MAC Address            | `ELAN_MAC_ADDR`                                                              | `781735000000`       |
+| Hardware Version       | `HW_HWVER`                                                                   | `BF9.A`              |
+| Software Version       | `OMCI_SW_VER1`, `OMCI_SW_VER2`, `CUSTOM_OMCI_SW_VER1`, `CUSTOM_OMCI_SW_VER2` | `V3R017C10S100`      |
+| GPON Serial Number     | `GPON_SN`                                                                    | `HWTC35000000`       |
+| Vendor ID              | `PON_VENDOR_ID`                                                              | `HWTC`               |
+| Device Model           | `GPON_ONU_MODEL`                                                             | `HG8240H`            |
+| OUI                    | `OUI`                                                                        | `875773`             |
+| Hardware Serial Number | `HW_SERIAL_NO`                                                               | `UONHUWH12341234123` |
+
+---
+
+# GPON and EPON Authentication
+
+Authentication methods vary between operators.
+
+## GPON
+
+Commonly uses:
+
+* GPON Serial Number
+* PLOAM Password
+
+## EPON
+
+Commonly uses:
+
+* LOID
+* LOID Password
+* MAC Address
+* Vendor-specific credentials
+
+Always verify the authentication method used by your ISP before changing parameters.
+
+---
+
+# Backup Original Configuration
+
+Before making any changes, record the original values.
+
+> Warning
+>
+> Incorrect configuration values may prevent ONU registration or service provisioning.
+>
+> Always keep a backup of the original settings.
+
+```shell
 flash get PON_VENDOR_ID
 flash get HW_CWMP_MANUFACTURER
 flash get HW_CWMP_PRODUCTCLASS
@@ -83,135 +147,189 @@ flash get OUI
 flash get HW_SERIAL_NO
 ```
 
-# Update Stick
-Every `flash set` require `reboot` to take effect
+---
 
-# Authentication
-* Authenticate your XPON Stick by **PLOAM Password** or **LOID**
-* Some OLT use MAC Address as authentication
+# Apply Configuration
 
-## PLOAM
-Commonly use by GPON network
-### HEX
-#### DFP-34X-2C2
+Most `flash set` operations require a reboot before changes become active.
+
+```shell
+reboot
 ```
+
+Apply all required parameters before rebooting the device.
+
+---
+
+# Authentication Configuration
+
+## PLOAM Password
+
+Used primarily on GPON networks.
+
+### DFP-34X-2C2 (HEX Format)
+
+```shell
 flash set GPON_PLOAM_FORMAT 0
 flash set GPON_PLOAM_PASSWD 44454641554C54303132
 ```
-> Firmware version `220304`& above only accept HEX PLOAM Password in the telnet, if you want to set ASCII, do it in WebGUI
 
-### ASCII
-#### V2801F, TWCGPON657, UF-Instant, 
-```
+> Firmware version `220304` and newer accepts only hexadecimal PLOAM values through Telnet. Use the WebUI if ASCII input is required.
+
+### ASCII Format
+
+Supported by:
+
+* V2801F
+* TWCGPON657
+* UF-Instant
+
+```shell
 flash set GPON_PLOAM_PASSWD DEFAULT012
 ```
 
-## LOID
-Commonly use by EPON network
-```
+## LOID Authentication
+
+Commonly used on EPON networks.
+
+```shell
 flash set LOID 0123456789
 flash set LOID_PASSWD 0123456789
 ```
 
-## ONU Serial Number
-```
+## GPON Serial Number
+
+```shell
 flash set GPON_SN HWTC12345678
 ```
-*Setting this require to update Vendor ID `PON_VENDOR_ID`*
 
-## MAC Address <sup>[*V2801F](#v2801f), [DFP-34X-2C2](#dfp-34x-2c2)</sup>
-```
+The Vendor ID portion of the serial number must match `PON_VENDOR_ID`.
+
+## MAC Address
+
+```shell
 flash set ELAN_MAC_ADDR 000000111111
 ```
-### Note:
-1. GPON encapsulated into a GEM frame which doesn't contain any **MAC information** of PON port.
-2. If your internet is Bind MAC Address, then you need change Router WAN MAC Address.
-3. EPON might need change MAC Address, use V2801F stick for EPON connection
 
+### Notes
+
+1. GPON transports traffic through GEM frames and does not use the ONU MAC address for normal upstream transport.
+2. If the ISP binds service to a MAC address, the router WAN MAC may need to be modified.
+3. EPON deployments may require the ONU MAC address to match the original device.
+
+---
 
 # OMCI Device Information
-* Many OLT only allow **certain** or **valid** " Universal ONU " model can be use
-* OLT will not up-stream OMCI provision for invalid/illegal ONU model even you have `O5` Status!
-* This section make your XPON Stick become valid!
 
-## Hardware Version <sup>[*V2801F](#v2801f)</sup>
-```
+OMCI (ONT Management and Control Interface) is used by the OLT to provision and manage ONU services.
+
+Many OLT platforms maintain vendor-specific ONU profiles. If the reported ONU identity does not match a supported profile, the ONU may authenticate successfully but fail to receive complete service provisioning.
+
+The following parameters define the ONU identity presented to the OLT.
+
+## Hardware Version
+
+```shell
 flash set HW_HWVER 168D.A
 ```
 
-## Manufacture Id
-OLT need to know which Manufacturer are in whitelist.
+## Vendor ID
 
-Some known Vendor ID:
-|   ID   | Vendor Name |
-|--------|-------------|
-| `HWTC` | Huawei      |
-| `ZTEG` | ZTE         |
-| `ALCL` | Nokia/Alcatel-Lucent |
-| `UBNT` | Ubiquiti    |
-| `FHTT` | Fiber Home  |
-| `RTKG` | Realtek     |
-| `TPLG` | TP-Link     |
-| `SCOM` | Sercomm     |
-| `LEOX` | Leox by LeoLabs|
+The Vendor ID identifies the ONU manufacturer.
 
-```
+Known examples:
+
+| ID     | Vendor                 |
+| ------ | ---------------------- |
+| `HWTC` | Huawei                 |
+| `ZTEG` | ZTE                    |
+| `ALCL` | Nokia / Alcatel-Lucent |
+| `UBNT` | Ubiquiti               |
+| `FHTT` | FiberHome              |
+| `RTKG` | Realtek                |
+| `TPLG` | TP-Link                |
+| `SCOM` | Sercomm                |
+| `LEOX` | LeoLabs                |
+
+```shell
 flash set PON_VENDOR_ID HWTC
 ```
-> Vendor ID must match with Serial Number
-> 
-> Some OLT have proprietary ecosystem, you must set this and enter `flash set OMCI_FAKE_OK 1`
+
+> The Vendor ID must match the GPON Serial Number prefix.
 
 ## Device Model
-```
+
+```shell
 flash set GPON_ONU_MODEL HG8240H5
 ```
 
 ## Software Version
-```
+
+```shell
 flash set OMCI_SW_VER1 V5R019C00S125
 flash set OMCI_SW_VER2 V5R019C00S125
 ```
-> Some Stick disallow changing, if you need correct Software Version to get auth, please enter `flash set OMCI_OLT_MODE 3`
-> 
+
+If the firmware prevents modification of these values, use:
+
+```shell
+flash set OMCI_OLT_MODE 3
+```
 
 ## OUI
-```
+
+```shell
 flash set OUI
 ```
-Organizationally Unique Identifier. Identifies the manufacturer of the device, usually first six digit HEX of MAC Address
 
-## Device Serial Number
-```
+The Organizationally Unique Identifier (OUI) identifies the manufacturer assigned to a MAC address block.
+
+## Hardware Serial Number
+
+```shell
 flash set HW_SERIAL_NO
 ```
-This different from `GPON_SN`, in Universal ONU deployment where mix and match brand. Hardware Serial Number identify which brand and which company make that ONU, so different OLT can use appropriate OMCI setting for that ONU and your fiber subscription
 
-# OMCI Additional
-## OMCI Fake `OK`
-OLT may send "model specific" OMCI provision that XPON Stick not understand, setting this value making your XPON Stick send `OK` reply on unsupport OMCI
-```
+This is separate from `GPON_SN`.
+
+In Universal ONU deployments, the Hardware Serial Number may be used by the OLT to identify the original hardware platform and determine compatibility behaviour.
+
+---
+
+# OMCI Additional Settings
+
+## Fake OK
+
+Some OLT platforms send vendor-specific OMCI messages that are not fully supported by RTL960x firmware.
+
+Enabling Fake OK causes the ONU to acknowledge unsupported OMCI messages instead of reporting an error.
+
+```shell
 flash set OMCI_FAKE_OK 1
 ```
 
+This setting is commonly used when emulating vendor-specific ONUs.
+
 ## OMCI OLT Mode
-Make **SFP XPON ONU Stick** universal, some OLT have special OMCI, most common OMCI is Huawei, for example, making **SFP XPON ONU Stick** act like Huawei ONU and understand Huawei OMCI and compatible with Huawei OLT.
 
-Even Nokia OLT, Huawei is most common due to "Universal ONU" deployment.
+OMCI OLT Mode controls how the RTL960x presents itself to the OLT.
 
-| OLT    | `OMCI_OLT_MODE` Value | OMCI Information |
-|--------|-----------------------|------------------|
-| Defaut | `0`  | Default info |
-| Huawei | `1`  | Huawei info |
-| ZTE    | `2`  | ZTE info |
-| Custom | `3`  | Own info |
-| Custom | `21` | Force own info by trigger [`segmention fault`](https://github.com/Anime4000/RTL960x/issues/30#issuecomment-1146604684) on **DFP-34X-2C2** default value |
+This feature allows the ONU to emulate behaviour expected by specific vendors.
 
-```
+| Mode    | Value | Description                                                            |
+| ------- | ----- | ---------------------------------------------------------------------- |
+| Default | `0`   | Default Realtek profile                                                |
+| Huawei  | `1`   | Huawei compatibility                                                   |
+| ZTE     | `2`   | ZTE compatibility                                                      |
+| Custom  | `3`   | User-defined profile                                                   |
+| Custom  | `21`  | Force custom profile using segmentation fault behaviour on DFP-34X-2C2 |
+
+```shell
 flash set OMCI_OLT_MODE 0
 ```
 
-When set own info, you need provide full custom OMCI Info:
+When using a custom profile, configure:
+
 1. `PON_VENDOR_ID`
 2. `GPON_ONU_MODEL`
 3. `HW_HWVER`
@@ -220,33 +338,43 @@ When set own info, you need provide full custom OMCI Info:
 
 ---
 
-# CWMP
-TR069. You can skip this if you have internet access, this may not required in most cases, some very strict OLT need
+# CWMP (TR-069)
 
-## `HW_CWMP_MANUFACTURER`
-```
+Most deployments do not require CWMP configuration.
+
+However, some operators validate CWMP information during provisioning.
+
+## Manufacturer
+
+```shell
 flash set HW_CWMP_MANUFACTURER 'Huawei Technologies Co., Ltd'
 ```
 
-## `HW_CWMP_PRODUCTCLASS`
-```
+## Product Class
+
+```shell
 flash set HW_CWMP_PRODUCTCLASS HGU
 ```
-Value can be:
-| Code | Full Name               | Purpose     | Device Example  |
-|------|-------------------------|-------------|-----------------|
-| IGD  | Internet Gateway Device | Router      |  |
-| HGU  | Home Gateway Unit       | Gateway ONT | Huawei HG8240H5, Huawei HG8145V5 |
-| SFU  | Single Family Unit      | Bridge ONT  | Huawei EG8010Hv6, Nokia G-240G-E |
 
+| Code | Description             |
+| ---- | ----------------------- |
+| IGD  | Internet Gateway Device |
+| HGU  | Home Gateway Unit       |
+| SFU  | Single Family Unit      |
 
-# Summary
-```
+---
+
+# Example Configuration
+
+The following example emulates a Nokia G-240G-E ONU.
+
+```shell
 flash set GPON_PLOAM_PASSWD 0123456789
 flash set GPON_SN ALCL00000000
 
 flash set GPON_ONU_MODEL G-240G-E
 flash set PON_VENDOR_ID ALCL
+
 flash set OMCI_SW_VER1 3FE46606BGCB45
 flash set OMCI_SW_VER2 3FE46606BGCB45
 flash set CUSTOM_OMCI_SW_VER1 3FE46606BGCB45
@@ -260,52 +388,68 @@ flash set OMCI_FAKE_OK 1
 flash set OMCI_OLT_MODE 1
 ```
 
-# MAC/HW Lock
-These stick mainly for commercial deployment where prevent user chaning device Id by having License Key. However, user can use on exting fiber to omit stock ONU or unlock GPON speed to 2.5Gb, for custom deployment, you may change MAC Address but not required on GPON due to Layer 3 transport omit MAC Address...
+Reboot the ONU after applying all configuration changes.
+
+---
+
+# MAC Address and Hardware Version Locking
+
+Certain vendors implement licensing mechanisms to prevent modification of ONU identity parameters.
+
+These mechanisms are commonly found in carrier-grade deployments.
 
 ## DFP-34X-2C2
-If you using `V1.0-220304` or newer firmware, changing `ELAN_MAC_ADDR` require to update `MAC_KEY`.
-## Syntax
-```
+
+Firmware `V1.0-220304` and newer requires a matching `MAC_KEY` whenever `ELAN_MAC_ADDR` is modified.
+
+### Generate MAC_KEY
+
+```shell
 echo -n "hsgq1.9aMAC_ADDR_UPPERCASE" | md5sum
 ```
 
-### Example
-Open a Linux Terminal or Stick Telnet and do:
-```
+Example:
+
+```shell
 echo -n "hsgq1.9aFFFFFF000000" | md5sum
 ```
 
-Return value look like this:
-```
-46f4ea2e3f18ba3bc1f2671b5f7e1f62  -
+Output:
+
+```text
+46f4ea2e3f18ba3bc1f2671b5f7e1f62
 ```
 
-Copy and update `MAC_KEY` in telnet:
-```
+Apply the generated value:
+
+```shell
 flash set MAC_KEY 46f4ea2e3f18ba3bc1f2671b5f7e1f62
 ```
 
 ## V2801F
-When changing `ELAN_MAC_ADDR` and/or `HW_HWVER`, you are required to update `VS_AUTH_KEY` by using `VsAuthKeyGen.exe` in command prompt.
 
-### Syntax:
-```
+Changing `ELAN_MAC_ADDR` or `HW_HWVER` requires a valid `VS_AUTH_KEY`.
+
+### Generate VS_AUTH_KEY
+
+```shell
 VsAuthKeyGen.exe <mac_address> [HW_HWVER]
 ```
 
-### Example
-Open a Command Prompt where `VsAuthKeyGen.exe` is reside, example:
-```
+Example:
+
+```shell
 VsAuthKeyGen.exe 000000111111 168D.A
 ```
 
-Return value look like this:
-```
+Output:
+
+```text
 9E7E54597511D721D3A2932B048C0494
 ```
 
-Copy and update `VS_AUTH_KEY` in telnet:
-```
+Apply the generated value:
+
+```shell
 flash set VS_AUTH_KEY 9E7E54597511D721D3A2932B048C0494
 ```
