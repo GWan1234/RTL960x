@@ -176,7 +176,7 @@ Devices such as the RB5009 can benefit from limiting switch egress bandwidth.
 /queue interface set sfp-sfpplus1 queue=multi-queue-ethernet-default
 ```
 
-Credit: Luckygecko1 @ Reddit](https://www.reddit.com/r/mikrotik/comments/14ky6s1/rb5009_poor_25g_ethernet_performance/jq0gjer/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
+Credit: [Luckygecko1 @ Reddit](https://www.reddit.com/r/mikrotik/comments/14ky6s1/rb5009_poor_25g_ethernet_performance/jq0gjer/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
 
 ---
 
